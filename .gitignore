@@ -171,3 +171,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# stuff lol
+my_local_data_dir/
