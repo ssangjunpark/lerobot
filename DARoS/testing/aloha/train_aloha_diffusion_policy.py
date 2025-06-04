@@ -17,7 +17,7 @@ def train():
     device = torch.device('cuda')
     #device = torch.device('cpu')
 
-    training_steps = 10000
+    training_steps = 500
     log_freq = 1
 
     # this is something that we need to change for our own robot.
@@ -28,7 +28,7 @@ def train():
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
     input_features = {key: ft for key, ft in features.items() if key not in output_features}
 
-    cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
+    cfg = DiffusionConfig(input_features=input_features, output_features=output_features, n_obs_steps=4)
 
     policy = DiffusionPolicy(cfg, dataset_stats=dataset_metadata.stats)
     policy.train()
