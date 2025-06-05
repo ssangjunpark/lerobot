@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# import gym_aloha  # noqa: F401
+import gym_aloha  # noqa: F401
 import gymnasium as gym
 import imageio
 import numpy
@@ -20,7 +20,7 @@ pretrained_policy_path = "outputs/train/example_aloha_transfer_box_diffusion"
 policy = DiffusionPolicy.from_pretrained(pretrained_policy_path)
 
 env = gym.make(
-    "aloha/AlohaTransferCube-v0",
+    "gym_aloha/AlohaTransferCube-v0",
     obs_type="pixels_agent_pos",
     max_episode_steps=300,
 )
@@ -37,7 +37,9 @@ step = 0
 done = False
 while not done:
     state = torch.from_numpy(numpy_observation["agent_pos"])
-    image = torch.from_numpy(numpy_observation["pixels"])
+    print(state.shape)
+    image = torch.from_numpy(numpy_observation["pixels"]["top"])
+    print(image.shape)
 
     state = state.to(torch.float32)
     image = image.to(torch.float32) / 255
@@ -50,8 +52,8 @@ while not done:
     image = image.unsqueeze(0)
 
     observation = {
-        "observation.state": state,
-        "observation.image": image,
+        "observation.state": [state * 4],
+        "observation.image": [image * 4],
     }
 
     with torch.inference_mode():
