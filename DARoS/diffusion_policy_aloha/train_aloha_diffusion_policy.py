@@ -11,6 +11,22 @@ from lerobot.configs.types import FeatureType
 DATASET_PATH = "lerobot/aloha_sim_transfer_cube_human_image"
 
 def train():
+
+    ### Begin Debug
+
+    delta_timestamps = {
+        "observation.images.top": [-0.3, -0.2, -0.1, 0.0],
+        "observation.state": [-0.3, -0.2, -0.1, 0.0],
+
+        "action": [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+    }
+    dataset = LeRobotDataset(DATASET_PATH, delta_timestamps=delta_timestamps)
+    print(dataset)
+    exit()
+
+    ### End Debug
+
+    
     output_directory = Path("outputs/train/example_aloha_transfer_box_diffusion")
     output_directory.mkdir(parents=True, exist_ok=True)
 
