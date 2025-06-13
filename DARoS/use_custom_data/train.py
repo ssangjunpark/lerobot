@@ -32,14 +32,20 @@ def main():
     # creating the policy:
     #   - input/output shapes: to properly size the policy
     #   - dataset stats: for normalization and denormalization of input/outputs
-    dataset_metadata = LeRobotDatasetMetadata(repo_id="LeRobotData", root=DATA_DIR)
+    
+    dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/libero_goal_image")
+    #dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/my_pusht", root=DATA_DIR)
     features = dataset_to_policy_features(dataset_metadata.features)
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
+    #print(output_features)
     input_features = {key: ft for key, ft in features.items() if key not in output_features}
-
+    #print(input_features)
+    # cfg = DiffusionConfig(input_features=input_features, output_features=output_features, crop_shape=None)
     cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
+    print(input_features)
 
     # We can now instantiate our policy with this config and the dataset stats.
+    #print(dataset_metadata.stats)
     policy = DiffusionPolicy(cfg, dataset_stats=dataset_metadata.stats)
     policy.train()
     policy.to(device)
@@ -48,6 +54,7 @@ def main():
     # which can differ for inputs, outputs and rewards (if there are some).
     delta_timestamps = {
         "observation.images.image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        #"observation.images.wrist_image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
         "observation.state": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
         "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
     }
@@ -57,6 +64,7 @@ def main():
         # Load the previous image and state at -0.1 seconds before current frame,
         # then load current image and state corresponding to 0.0 second.
         "observation.images.image": [-0.1, 0.0],
+        #"observation.images.wrist_image": [-0.1, 0.0],
         "observation.state": [-0.1, 0.0],
         # Load the previous action (-0.1), the next action to be executed (0.0),
         # and 14 future actions with a 0.1 seconds spacing. All these actions will be
@@ -64,7 +72,8 @@ def main():
         "action": [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
     }
 
-    dataset = LeRobotDataset(repo_id="LeRobotData", root=DATA_DIR, delta_timestamps=delta_timestamps)
+    # dataset = LeRobotDataset(repo_id="lerobot/my_pusht", root=DATA_DIR, delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(repo_id="lerobot/libero_goal_image", delta_timestamps=delta_timestamps)
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
