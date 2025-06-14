@@ -254,7 +254,7 @@ def load_image_as_numpy(
         img_array /= 255.0
     return img_array
 
-
+import io
 def hf_transform_to_torch(items_dict: dict[torch.Tensor | None]):
     """Get a transform function that convert items from Hugging Face dataset (pyarrow)
     to torch tensors. Importantly, images are converted from PIL, which corresponds to
@@ -266,6 +266,14 @@ def hf_transform_to_torch(items_dict: dict[torch.Tensor | None]):
         if isinstance(first_item, PILImage.Image):
             to_tensor = transforms.ToTensor()
             items_dict[key] = [to_tensor(img) for img in items_dict[key]]
+        elif isinstance(first_item, dict):
+            to_tensor = transforms.ToTensor()
+            lst = []
+            for data in items_dict[key]:
+                img_binary = data['bytes']
+                img = PILImage.open(io.BytesIO(img_binary)).convert('RGB')
+                lst.append(to_tensor(img))
+            items_dict[key] = lst
         elif first_item is None:
             pass
         else:
