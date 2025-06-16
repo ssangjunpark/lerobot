@@ -27,7 +27,7 @@ def main():
 
     # Number of offline training steps (we'll only do offline training for this example.)
     # Adjust as you prefer. 5000 steps are needed to get something worth evaluating.
-    training_steps = 5000
+    training_steps = 500
     log_freq = 1
 
     # When starting from scratch (i.e. not from a pretrained policy), we need to specify 2 things before
@@ -36,7 +36,7 @@ def main():
     #   - dataset stats: for normalization and denormalization of input/outputs
     
     #dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/libero_goal_image")
-    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros14_2036")
+    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros16_2022")
     features = dataset_to_policy_features(dataset_metadata.features)
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
     #print(output_features)
@@ -74,7 +74,7 @@ def main():
     }
 
     #dataset = LeRobotDataset(repo_id="lerobot/libero_goal_image", delta_timestamps=delta_timestamps)
-    dataset = LeRobotDataset(repo_id="ssangjunpark/daros14_2036", delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(repo_id="ssangjunpark/daros16_2022", delta_timestamps=delta_timestamps)
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
