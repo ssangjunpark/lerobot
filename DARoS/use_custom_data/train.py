@@ -36,7 +36,7 @@ def main():
     #   - dataset stats: for normalization and denormalization of input/outputs
     
     #dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/libero_goal_image")
-    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros16_2022")
+    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros18_1510")
     features = dataset_to_policy_features(dataset_metadata.features)
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
     #print(output_features)
@@ -53,18 +53,23 @@ def main():
     policy.train()
     policy.to(device)
 
-    delta_timestamps = {
-        "observation.images.image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-        #"observation.images.wrist_image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-        "observation.state": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-        "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
-    }
+    # delta_timestamps = {
+    #     "observation.images.top": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.images.hand1": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.images.hand2": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+
+    #     #"observation.images.wrist_image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.state": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
+    # }
 
     # In this case with the standard configuration for Diffusion Policy, it is equivalent to this:
     delta_timestamps = {
         # Load the previous image and state at -0.1 seconds before current frame,
         # then load current image and state corresponding to 0.0 second.
-        "observation.images.image": [-0.1, 0.0],
+        "observation.images.top": [-0.1, 0.0],
+        "observation.images.hand1": [-0.1, 0.0],
+        "observation.images.hand2": [-0.1, 0.0],
         #"observation.images.wrist_image": [-0.1, 0.0],
         "observation.state": [-0.1, 0.0],
         # Load the previous action (-0.1), the next action to be executed (0.0),
@@ -74,7 +79,7 @@ def main():
     }
 
     #dataset = LeRobotDataset(repo_id="lerobot/libero_goal_image", delta_timestamps=delta_timestamps)
-    dataset = LeRobotDataset(repo_id="ssangjunpark/daros16_2022", delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(repo_id="ssangjunpark/daros18_1510", delta_timestamps=delta_timestamps)
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
