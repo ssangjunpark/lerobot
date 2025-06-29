@@ -36,13 +36,23 @@ def main():
     #   - dataset stats: for normalization and denormalization of input/outputs
     
     #dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/libero_goal_image")
-    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros18_1510")
+    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros29_0719")
     features = dataset_to_policy_features(dataset_metadata.features)
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
     #print(output_features)
     input_features = {key: ft for key, ft in features.items() if key not in output_features}
     print(input_features)
     cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
+
+
+    # cfg = DiffusionConfig(
+    #     input_features=input_features, 
+    #     output_features=output_features,
+
+    #     )
+
+
+
     #cfg = SmolVLAConfig(input_features=input_features, output_features=output_features)
     #cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
     #print(input_features)
@@ -67,9 +77,9 @@ def main():
     delta_timestamps = {
         # Load the previous image and state at -0.1 seconds before current frame,
         # then load current image and state corresponding to 0.0 second.
-        "observation.images.top": [-0.1, 0.0],
-        "observation.images.hand1": [-0.1, 0.0],
-        "observation.images.hand2": [-0.1, 0.0],
+        "observation.images.top_camera": [-0.1, 0.0],
+        "observation.images.left_camera": [-0.1, 0.0],
+        "observation.images.right_camera": [-0.1, 0.0],
         #"observation.images.wrist_image": [-0.1, 0.0],
         "observation.state": [-0.1, 0.0],
         # Load the previous action (-0.1), the next action to be executed (0.0),
@@ -79,7 +89,7 @@ def main():
     }
 
     #dataset = LeRobotDataset(repo_id="lerobot/libero_goal_image", delta_timestamps=delta_timestamps)
-    dataset = LeRobotDataset(repo_id="ssangjunpark/daros18_1510", delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(repo_id="ssangjunpark/daros29_0719", delta_timestamps=delta_timestamps)
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
@@ -91,6 +101,22 @@ def main():
         pin_memory=device.type != "cpu",
         drop_last=True,
     )
+
+    #debug
+    # import matplotlib.pyplot as plt
+    # for batch in dataloader:
+    #     print(batch["observation.images.top_camera"][0])
+    #     print(type(batch["observation.images.top_camera"][0].numpy()[0]))
+
+    #     plt.imshow(batch["observation.images.top_camera"][0].numpy()[0].transpose(1,2,0))
+    #     plt.show()
+
+    #     plt.imshow(batch["observation.images.left_camera"][0].numpy()[0].transpose(1,2,0))
+    #     plt.show()
+
+    #     plt.imshow(batch["observation.images.right_camera"][0].numpy()[0].transpose(1,2,0))
+    #     plt.show()
+    #     exit()
 
     # Run training loop.
     step = 0
@@ -115,7 +141,6 @@ def main():
     print(SAVE_DIR)
 if __name__ == "__main__":
     main()
-
 
 
 """
