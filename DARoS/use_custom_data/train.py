@@ -27,7 +27,7 @@ def main():
 
     # Number of offline training steps (we'll only do offline training for this example.)
     # Adjust as you prefer. 5000 steps are needed to get something worth evaluating.
-    training_steps = 500
+    training_steps = 10000
     log_freq = 1
 
     # When starting from scratch (i.e. not from a pretrained policy), we need to specify 2 things before
@@ -36,19 +36,18 @@ def main():
     #   - dataset stats: for normalization and denormalization of input/outputs
     
     #dataset_metadata = LeRobotDatasetMetadata(repo_id="lerobot/libero_goal_image")
-    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros29_0719")
+    dataset_metadata = LeRobotDatasetMetadata(repo_id="ssangjunpark/daros09_2111")
     features = dataset_to_policy_features(dataset_metadata.features)
     output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
     #print(output_features)
     input_features = {key: ft for key, ft in features.items() if key not in output_features}
     print(input_features)
-    cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
+    cfg = DiffusionConfig(input_features=input_features, output_features=output_features, n_obs_steps=3)
 
 
     # cfg = DiffusionConfig(
     #     input_features=input_features, 
     #     output_features=output_features,
-
     #     )
 
 
@@ -64,32 +63,42 @@ def main():
     policy.to(device)
 
     # delta_timestamps = {
-    #     "observation.images.top": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-    #     "observation.images.hand1": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-    #     "observation.images.hand2": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.images.top_camera": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.images.left_camera": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+    #     "observation.images.right_camera": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
 
-    #     #"observation.images.wrist_image": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
     #     "observation.state": [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
     #     "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
     # }
 
+    # print(delta_timestamps)
+    # exit()
+
     # In this case with the standard configuration for Diffusion Policy, it is equivalent to this:
+    # delta_timestamps = {
+    #     # Load the previous image and state at -0.1 seconds before current frame,
+    #     # then load current image and state corresponding to 0.0 second.
+    #     "observation.images.top_camera": [-0.1, 0.0],
+    #     "observation.images.left_camera": [-0.1, 0.0],
+    #     "observation.images.right_camera": [-0.1, 0.0],
+    #     #"observation.images.wrist_image": [-0.1, 0.0],
+    #     "observation.state": [-0.1, 0.0],
+    #     # Load the previous action (-0.1), the next action to be executed (0.0),
+    #     # and 14 future actions with a 0.1 seconds spacing. All these actions will be
+    #     # used to supervise the policy.
+    #     "action": [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+    # }
+
     delta_timestamps = {
-        # Load the previous image and state at -0.1 seconds before current frame,
-        # then load current image and state corresponding to 0.0 second.
-        "observation.images.top_camera": [-0.1, 0.0],
-        "observation.images.left_camera": [-0.1, 0.0],
-        "observation.images.right_camera": [-0.1, 0.0],
-        #"observation.images.wrist_image": [-0.1, 0.0],
-        "observation.state": [-0.1, 0.0],
-        # Load the previous action (-0.1), the next action to be executed (0.0),
-        # and 14 future actions with a 0.1 seconds spacing. All these actions will be
-        # used to supervise the policy.
-        "action": [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+        "observation.images.top_camera": [-0.04, -0.02, 0.0],
+        "observation.images.left_camera": [-0.04, -0.02, 0.0],
+        "observation.images.right_camera": [-0.04, -0.02, 0.0],
+        "observation.state": [-0.04, -0.02, 0.0],
+        "action": [i / dataset_metadata.fps for i in cfg.action_delta_indices],
     }
 
     #dataset = LeRobotDataset(repo_id="lerobot/libero_goal_image", delta_timestamps=delta_timestamps)
-    dataset = LeRobotDataset(repo_id="ssangjunpark/daros29_0719", delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(repo_id="ssangjunpark/daros09_2111", delta_timestamps=delta_timestamps)
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
